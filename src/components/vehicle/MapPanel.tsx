@@ -71,6 +71,7 @@ export function MapPanel({ vehicles }: { vehicles: MapVehicle[] }) {
         {vehicles.map((v) => (
           <button
             key={v.id}
+            type="button"
             style={position(v.lat, v.lng)}
             onClick={() => setActive(v.id)}
             className={cn(
@@ -99,18 +100,21 @@ export function MapPanel({ vehicles }: { vehicles: MapVehicle[] }) {
 
       <div className="absolute bottom-4 right-4 flex flex-col gap-1.5">
         <button
+          type="button"
           onClick={() => setZoom((z) => Math.min(2, z + 0.2))}
           className="flex size-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-50"
         >
           <Plus className="size-4" />
         </button>
         <button
+          type="button"
           onClick={() => setZoom((z) => Math.max(0.6, z - 0.2))}
           className="flex size-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-50"
         >
           <Minus className="size-4" />
         </button>
         <button
+          type="button"
           onClick={() => setZoom(1)}
           className="flex size-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-50"
         >

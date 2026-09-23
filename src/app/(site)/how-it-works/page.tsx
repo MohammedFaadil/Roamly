@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PLATFORM_FEE_RATE } from "@/lib/constants";
+import { accentFor, type Accent } from "@/lib/accents";
 
 const renterSteps = [
   {
@@ -148,7 +149,13 @@ export default function HowItWorksPage() {
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {renterSteps.map((step, i) => (
-            <StepCard key={step.title} number={i + 1} icon={<step.icon className="size-5" />} title={step.title}>
+            <StepCard
+              key={step.title}
+              number={i + 1}
+              icon={<step.icon className="size-5" />}
+              title={step.title}
+              accent={accentFor(i)}
+            >
               {step.body}
             </StepCard>
           ))}
@@ -174,7 +181,13 @@ export default function HowItWorksPage() {
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {ownerSteps.map((step, i) => (
-              <StepCard key={step.title} number={i + 1} icon={<step.icon className="size-5" />} title={step.title}>
+              <StepCard
+                key={step.title}
+                number={i + 1}
+                icon={<step.icon className="size-5" />}
+                title={step.title}
+                accent={accentFor(i)}
+              >
                 {step.body}
               </StepCard>
             ))}
@@ -186,7 +199,7 @@ export default function HowItWorksPage() {
             className="mt-14 rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-8 scroll-mt-20"
           >
             <div className="flex items-start gap-4">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                 <Sparkles className="size-5" />
               </div>
               <div>
@@ -226,23 +239,30 @@ function StepCard({
   number,
   icon,
   title,
+  accent,
   children,
 }: {
   number: number;
   icon: React.ReactNode;
   title: string;
+  accent: Accent;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
+    <div className="group relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <span className="absolute right-5 top-5 text-2xl font-bold text-gray-100">
         {number < 10 ? `0${number}` : number}
       </span>
-      <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
+      <div
+        className={`flex size-10 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110 ${accent.bg} ${accent.text}`}
+      >
         {icon}
       </div>
       <h3 className="mt-4 text-sm font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-[var(--muted)]">{children}</p>
+      <span
+        className={`absolute bottom-0 left-6 right-6 h-0.5 scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100 ${accent.solid}`}
+      />
     </div>
   );
 }

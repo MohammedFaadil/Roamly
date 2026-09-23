@@ -10,6 +10,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { accentFor } from "@/lib/accents";
 
 const sections = [
   {
@@ -107,27 +108,30 @@ export default function SafetyPage() {
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {sections.map((section) => (
+        {sections.map((section, i) => {
+          const accent = accentFor(i);
+          return (
           <div
             key={section.title}
             className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6"
           >
             <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
+              <div className={`flex size-10 shrink-0 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
                 <section.icon className="size-5" />
               </div>
               <h2 className="text-base font-bold">{section.title}</h2>
             </div>
             <ul className="mt-4 space-y-2.5">
-              {section.items.map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--muted)]">
+              {section.items.map((item, j) => (
+                <li key={j} className="flex items-start gap-2.5 text-sm text-[var(--muted)]">
                   <span className="mt-1.5 size-1 shrink-0 rounded-full bg-[var(--border-strong)]" />
                   {item}
                 </li>
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-12 rounded-[var(--radius-xl)] bg-[var(--primary)] px-6 py-10 sm:px-12 text-center">

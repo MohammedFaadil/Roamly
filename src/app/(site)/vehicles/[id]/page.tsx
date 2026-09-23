@@ -44,6 +44,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatINR, formatDate, timeAgo } from "@/lib/format";
 import { categoryLabel } from "@/lib/constants";
 import { fuelPriceEstimate } from "@/lib/pricing";
+import { accentFor, type Accent } from "@/lib/accents";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,7 @@ export default async function VehicleDetailPage({
       where: { city: vehicle.city, type: vehicle.type, status: "ACTIVE", id: { not: vehicle.id } },
       orderBy: { ratingAvg: "desc" },
       take: 4,
+      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     }),
   ]);
 
@@ -163,13 +165,13 @@ export default async function VehicleDetailPage({
                       <div>
                         <h3 className="text-sm font-semibold mb-3">Basic information</h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                          <Spec icon={<Gauge className="size-4" />} label="Transmission" value={vehicle.transmission === "AUTOMATIC" ? "Automatic" : "Manual"} />
-                          <Spec icon={<Fuel className="size-4" />} label="Fuel type" value={vehicle.fuelType.charAt(0) + vehicle.fuelType.slice(1).toLowerCase()} />
-                          {vehicle.seats && <Spec icon={<Users className="size-4" />} label="Seats" value={String(vehicle.seats)} />}
-                          <Spec icon={<Calendar className="size-4" />} label="Year" value={String(vehicle.year)} />
-                          <Spec icon={<RouteIcon className="size-4" />} label="Odometer" value={`${vehicle.odometerKm.toLocaleString("en-IN")} km`} />
+                          <Spec icon={<Gauge className="size-4" />} accent={accentFor(0)} label="Transmission" value={vehicle.transmission === "AUTOMATIC" ? "Automatic" : "Manual"} />
+                          <Spec icon={<Fuel className="size-4" />} accent={accentFor(1)} label="Fuel type" value={vehicle.fuelType.charAt(0) + vehicle.fuelType.slice(1).toLowerCase()} />
+                          {vehicle.seats && <Spec icon={<Users className="size-4" />} accent={accentFor(2)} label="Seats" value={String(vehicle.seats)} />}
+                          <Spec icon={<Calendar className="size-4" />} accent={accentFor(3)} label="Year" value={String(vehicle.year)} />
+                          <Spec icon={<RouteIcon className="size-4" />} accent={accentFor(4)} label="Odometer" value={`${vehicle.odometerKm.toLocaleString("en-IN")} km`} />
                           {vehicle.engineCapacityCc ? (
-                            <Spec icon={<Wrench className="size-4" />} label="Engine" value={`${vehicle.engineCapacityCc} cc`} />
+                            <Spec icon={<Wrench className="size-4" />} accent={accentFor(5)} label="Engine" value={`${vehicle.engineCapacityCc} cc`} />
                           ) : null}
                         </div>
                       </div>
@@ -203,12 +205,12 @@ export default async function VehicleDetailPage({
                   label: "Rental rules",
                   content: (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Rule icon={<RouteIcon className="size-4" />} title="Included distance" desc={`${vehicle.includedKmPerDay} km/day included. Extra usage billed at ${formatINR(vehicle.extraKmCharge)}/km.`} />
-                      <Rule icon={<Droplets className="size-4" />} title="Fuel policy" desc={vehicle.fuelPolicy} />
-                      <Rule icon={<Clock3 className="size-4" />} title="Rental duration" desc={`Minimum ${vehicle.minRentalHours} hours, maximum ${vehicle.maxRentalDays} days.`} />
-                      <Rule icon={<Clock3 className="size-4" />} title="Late return" desc={`${formatINR(vehicle.lateFeePerHour)}/hour after a 30-minute grace period.`} />
-                      <Rule icon={<Ban className="size-4" />} title="Smoking" desc="Not allowed inside the vehicle." />
-                      <Rule icon={<Ban className="size-4" />} title="Sub-renting" desc="Strictly prohibited under platform terms." />
+                      <Rule icon={<RouteIcon className="size-4" />} accent={accentFor(0)} title="Included distance" desc={`${vehicle.includedKmPerDay} km/day included. Extra usage billed at ${formatINR(vehicle.extraKmCharge)}/km.`} />
+                      <Rule icon={<Droplets className="size-4" />} accent={accentFor(1)} title="Fuel policy" desc={vehicle.fuelPolicy} />
+                      <Rule icon={<Clock3 className="size-4" />} accent={accentFor(2)} title="Rental duration" desc={`Minimum ${vehicle.minRentalHours} hours, maximum ${vehicle.maxRentalDays} days.`} />
+                      <Rule icon={<Clock3 className="size-4" />} accent={accentFor(3)} title="Late return" desc={`${formatINR(vehicle.lateFeePerHour)}/hour after a 30-minute grace period.`} />
+                      <Rule icon={<Ban className="size-4" />} accent={accentFor(4)} title="Smoking" desc="Not allowed inside the vehicle." />
+                      <Rule icon={<Ban className="size-4" />} accent={accentFor(5)} title="Sub-renting" desc="Strictly prohibited under platform terms." />
                     </div>
                   ),
                 },
@@ -278,7 +280,7 @@ export default async function VehicleDetailPage({
           <h2 className="text-lg font-bold mb-4">Similar vehicles in {vehicle.city}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {similar.map((v) => (
-              <VehicleCard key={v.id} vehicle={v} isAuthenticated={!!user} />
+              <VehicleCard key={v.id} vehicle={{ ...v, imageUrl: v.images[0]?.url ?? null }} isAuthenticated={!!user} />
             ))}
           </div>
         </div>
@@ -287,10 +289,20 @@ export default async function VehicleDetailPage({
   );
 }
 
-function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Spec({
+  icon,
+  accent,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  accent: Accent;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-start gap-2.5">
-      <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 text-[var(--muted)] shrink-0">
+      <div className={`flex size-8 items-center justify-center rounded-full shrink-0 ${accent.bg} ${accent.text}`}>
         {icon}
       </div>
       <div>
@@ -301,10 +313,20 @@ function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; va
   );
 }
 
-function Rule({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function Rule({
+  icon,
+  accent,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  accent: Accent;
+  title: string;
+  desc: string;
+}) {
   return (
     <div className="flex gap-3 rounded-[var(--radius-md)] border border-[var(--border)] p-4">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[var(--muted)]">
+      <div className={`flex size-9 shrink-0 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
         {icon}
       </div>
       <div>

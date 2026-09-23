@@ -425,7 +425,7 @@ export function VehicleWizard() {
 
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] p-5">
               <div className="flex gap-4">
-                <VehicleThumb type={form.type} brand={form.brand || "Vehicle"} model={form.model} seed="preview" className="h-24 w-32 rounded-[var(--radius-sm)] shrink-0" iconClassName="size-9" />
+                <VehicleThumb type={form.type} brand={form.brand || "Vehicle"} model={form.model} seed="preview" imageUrl={form.images[0]} className="h-24 w-32 rounded-[var(--radius-sm)] shrink-0" iconClassName="size-9" />
                 <div>
                   <p className="font-semibold">{form.year} {form.brand} {form.model}</p>
                   <p className="text-sm text-[var(--muted)]">{form.area ? `${form.area}, ` : ""}{form.city}</p>

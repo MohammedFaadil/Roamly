@@ -3,16 +3,21 @@ import { cn } from "@/lib/utils";
 import { gradientForVehicle } from "@/lib/constants";
 
 /**
- * Demo vehicles have no real photography (to avoid using stock images of actual
- * car models without rights). This renders a consistent, premium gradient
- * placeholder instead. Real owner-uploaded listings use actual photos via
- * VehicleImage records and never hit this component.
+ * Vehicle thumbnail with a real-photo fast path: pass `imageUrl` when the
+ * vehicle has one (seeded demo vehicles now carry real Wikimedia Commons
+ * photos matching their exact model — see prisma/seed.ts's VEHICLE_IMAGES
+ * map — and owner-uploaded listings carry real uploaded photos). Falls back
+ * to a consistent branded gradient placeholder only when no photo exists yet
+ * (e.g. a freshly-listed vehicle with no photos uploaded, or the rare model
+ * with no rights-cleared photo available — see the Ather 450X note in
+ * prisma/seed.ts).
  */
 export function VehicleThumb({
   type,
   brand,
   model,
   seed,
+  imageUrl,
   className,
   iconClassName,
 }: {
@@ -20,9 +25,21 @@ export function VehicleThumb({
   brand: string;
   model: string;
   seed: string;
+  imageUrl?: string | null;
   className?: string;
   iconClassName?: string;
 }) {
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageUrl}
+        alt={`${brand} ${model}`}
+        className={cn("object-cover", className)}
+      />
+    );
+  }
+
   const gradient = gradientForVehicle(seed);
   const Icon = type === "CAR" ? Car : Bike;
 

@@ -18,6 +18,7 @@ export interface BookingRowData {
     model: string;
     year: number;
     city: string;
+    imageUrl?: string | null;
   };
   counterpartyName: string;
   counterpartyRole: "Owner" | "Renter";
@@ -34,6 +35,7 @@ export function BookingRow({ booking }: { booking: BookingRowData }) {
         brand={booking.vehicle.brand}
         model={booking.vehicle.model}
         seed={booking.vehicle.id}
+        imageUrl={booking.vehicle.imageUrl}
         className="h-16 w-20 shrink-0 rounded-[var(--radius-sm)]"
         iconClassName="size-7"
       />

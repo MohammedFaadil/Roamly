@@ -12,6 +12,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/Button";
 import { APP_NAME, CITIES } from "@/lib/constants";
+import { ACCENTS, accentFor, type Accent } from "@/lib/accents";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function AboutPage() {
       <section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
-            <div className="flex size-11 items-center justify-center rounded-full bg-gray-100">
+            <div className={`flex size-11 items-center justify-center rounded-full ${ACCENTS[0].bg} ${ACCENTS[0].text}`}>
               <Target className="size-5" />
             </div>
             <h2 className="mt-4 text-lg font-bold">Our mission</h2>
@@ -61,7 +62,7 @@ export default async function AboutPage() {
             </p>
           </div>
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
-            <div className="flex size-11 items-center justify-center rounded-full bg-gray-100">
+            <div className={`flex size-11 items-center justify-center rounded-full ${ACCENTS[1].bg} ${ACCENTS[1].text}`}>
               <Eye className="size-5" />
             </div>
             <h2 className="mt-4 text-lg font-bold">Our vision</h2>
@@ -81,15 +82,15 @@ export default async function AboutPage() {
             A simple flow built around trust, transparency, and control for both sides.
           </p>
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
-            <MiniStep icon={<FileCheck2 className="size-5" />} title="Verify">
+            <MiniStep icon={<FileCheck2 className="size-5" />} accent={accentFor(0)} title="Verify">
               Renters and owners both complete identity verification before their first
               transaction.
             </MiniStep>
-            <MiniStep icon={<Wallet className="size-5" />} title="Book & pay">
+            <MiniStep icon={<Wallet className="size-5" />} accent={accentFor(1)} title="Book & pay">
               Renters send a request, owners approve it, and payment is settled with a clear,
               itemised breakdown.
             </MiniStep>
-            <MiniStep icon={<KeyRound className="size-5" />} title="Drive & return">
+            <MiniStep icon={<KeyRound className="size-5" />} accent={accentFor(2)} title="Drive & return">
               A digital agreement, a documented handover, and a documented return protect both
               sides of every rental.
             </MiniStep>
@@ -135,19 +136,19 @@ export default async function AboutPage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-14">
           <h2 className="text-xl font-bold tracking-tight">Why choose {APP_NAME}</h2>
           <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <WhyItem icon={<ShieldCheck className="size-5" />} title="Verified community">
+            <WhyItem icon={<ShieldCheck className="size-5" />} accent={accentFor(0)} title="Verified community">
               Every renter and owner goes through identity verification, so you know who
               you&apos;re dealing with.
             </WhyItem>
-            <WhyItem icon={<Wallet className="size-5" />} title="Transparent pricing">
+            <WhyItem icon={<Wallet className="size-5" />} accent={accentFor(1)} title="Transparent pricing">
               No surprise fees — the full cost breakdown is visible before you ever confirm a
               booking.
             </WhyItem>
-            <WhyItem icon={<Handshake className="size-5" />} title="Owner-controlled listings">
+            <WhyItem icon={<Handshake className="size-5" />} accent={accentFor(2)} title="Owner-controlled listings">
               Owners set their own price, availability, and approve every request — full control,
               always.
             </WhyItem>
-            <WhyItem icon={<FileCheck2 className="size-5" />} title="Documented handovers">
+            <WhyItem icon={<FileCheck2 className="size-5" />} accent={accentFor(3)} title="Documented handovers">
               Digital agreements and photo-documented handovers protect both renters and owners.
             </WhyItem>
           </div>
@@ -185,16 +186,18 @@ export default async function AboutPage() {
 
 function MiniStep({
   icon,
+  accent,
   title,
   children,
 }: {
   icon: React.ReactNode;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5">
-      <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
+      <div className={`flex size-10 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
         {icon}
       </div>
       <h3 className="mt-3 text-sm font-semibold">{title}</h3>
@@ -214,16 +217,18 @@ function Commitment({ children }: { children: React.ReactNode }) {
 
 function WhyItem({
   icon,
+  accent,
   title,
   children,
 }: {
   icon: React.ReactNode;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white border border-[var(--border)]">
+      <div className={`flex size-11 shrink-0 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
         {icon}
       </div>
       <div>

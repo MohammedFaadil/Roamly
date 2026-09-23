@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { X, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatINR } from "@/lib/format";
 import {
   CAR_CATEGORIES,
   BIKE_CATEGORIES,
@@ -46,6 +45,66 @@ export function VehicleFilters({
     },
     [router, pathname, searchParams]
   );
+
+  // Price range: dragging/typing updates this local "draft" instantly (no
+  // network), and only commits to the URL — which triggers the actual
+  // server-side refetch — once the user pauses or releases. Committing on
+  // every onChange tick (a range input fires continuously while dragging)
+  // is what made the slider feel laggy before.
+  const [draftPrice, setDraftPrice] = useState({ min: minPrice, max: maxPrice });
+  const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Re-sync the draft when the URL's own values change (Reset all, browser
+  // back/forward, another filter clearing minPrice/maxPrice) — but not on
+  // every render, or it would stomp on in-progress dragging/typing. Adjusting
+  // state during render (React's recommended alternative to an effect for
+  // "reset local state when a prop changes") rather than via useEffect avoids
+  // an extra render pass and a lint violation for setState-in-effect.
+  const [syncedFromUrl, setSyncedFromUrl] = useState({ min: minPrice, max: maxPrice });
+  if (syncedFromUrl.min !== minPrice || syncedFromUrl.max !== maxPrice) {
+    setSyncedFromUrl({ min: minPrice, max: maxPrice });
+    setDraftPrice({ min: minPrice, max: maxPrice });
+  }
+
+  const commitPrice = useCallback(
+    (next: { min: number; max: number }) => {
+      if (commitTimer.current) clearTimeout(commitTimer.current);
+      setParams({ minPrice: String(next.min), maxPrice: String(next.max) });
+    },
+    [setParams]
+  );
+
+  const scheduleCommitPrice = useCallback(
+    (next: { min: number; max: number }) => {
+      if (commitTimer.current) clearTimeout(commitTimer.current);
+      commitTimer.current = setTimeout(() => commitPrice(next), 400);
+    },
+    [commitPrice]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (commitTimer.current) clearTimeout(commitTimer.current);
+    };
+  }, []);
+
+  function updateDraftMin(raw: number) {
+    setDraftPrice((prev) => {
+      const clamped = Math.max(priceBounds.min, Math.min(raw, prev.max - 1));
+      const next = { ...prev, min: clamped };
+      scheduleCommitPrice(next);
+      return next;
+    });
+  }
+
+  function updateDraftMax(raw: number) {
+    setDraftPrice((prev) => {
+      const clamped = Math.min(priceBounds.max, Math.max(raw, prev.min + 1));
+      const next = { ...prev, max: clamped };
+      scheduleCommitPrice(next);
+      return next;
+    });
+  }
 
   function toggleListParam(key: string, current: string[], value: string) {
     const next = current.includes(value)
@@ -105,52 +164,90 @@ export function VehicleFilters({
           <div className="flex h-14 items-end gap-[2px]">
             {priceHistogram.map((h, i) => {
               const bucketMin = priceBounds.min + ((priceBounds.max - priceBounds.min) * i) / priceHistogram.length;
-              const inRange = bucketMin >= minPrice && bucketMin <= maxPrice;
+              const inRange = bucketMin >= draftPrice.min && bucketMin <= draftPrice.max;
               const maxH = Math.max(...priceHistogram, 1);
               return (
                 <div
                   key={i}
                   style={{ height: `${Math.max(8, (h / maxH) * 100)}%` }}
-                  className={cn("flex-1 rounded-t-sm", inRange ? "bg-[var(--primary)]" : "bg-gray-200")}
+                  className={cn("flex-1 rounded-t-sm transition-colors", inRange ? "bg-[var(--primary)]" : "bg-gray-200")}
                 />
               );
             })}
           </div>
           <div className="relative mt-3 h-4">
             <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--border-strong)]" />
-            <input
-              type="range"
-              min={priceBounds.min}
-              max={priceBounds.max}
-              value={minPrice}
-              onChange={(e) => {
-                const v = Math.min(Number(e.target.value), maxPrice - 1);
-                setParams({ minPrice: String(v) });
+            <div
+              className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--primary)]"
+              style={{
+                left: `${((draftPrice.min - priceBounds.min) / (priceBounds.max - priceBounds.min || 1)) * 100}%`,
+                right: `${100 - ((draftPrice.max - priceBounds.min) / (priceBounds.max - priceBounds.min || 1)) * 100}%`,
               }}
-              className="absolute inset-x-0 top-0 w-full pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto"
             />
             <input
               type="range"
               min={priceBounds.min}
               max={priceBounds.max}
-              value={maxPrice}
-              onChange={(e) => {
-                const v = Math.max(Number(e.target.value), minPrice + 1);
-                setParams({ maxPrice: String(v) });
-              }}
-              className="absolute inset-x-0 top-0 w-full pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto"
+              value={draftPrice.min}
+              onChange={(e) => updateDraftMin(Number(e.target.value))}
+              onMouseUp={() => commitPrice(draftPrice)}
+              onTouchEnd={() => commitPrice(draftPrice)}
+              onKeyUp={() => commitPrice(draftPrice)}
+              aria-label="Minimum price per day"
+              className="absolute inset-x-0 top-0 w-full pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+            />
+            <input
+              type="range"
+              min={priceBounds.min}
+              max={priceBounds.max}
+              value={draftPrice.max}
+              onChange={(e) => updateDraftMax(Number(e.target.value))}
+              onMouseUp={() => commitPrice(draftPrice)}
+              onTouchEnd={() => commitPrice(draftPrice)}
+              onKeyUp={() => commitPrice(draftPrice)}
+              aria-label="Maximum price per day"
+              className="absolute inset-x-0 top-0 w-full pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
             />
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <div className="flex-1 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-3 py-1.5">
-              <p className="text-[10px] font-semibold uppercase text-[var(--muted)]">From</p>
-              <p className="text-sm font-semibold">{formatINR(minPrice)}</p>
-            </div>
-            <div className="flex-1 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-3 py-1.5">
-              <p className="text-[10px] font-semibold uppercase text-[var(--muted)]">To</p>
-              <p className="text-sm font-semibold">{formatINR(maxPrice)}</p>
-            </div>
+            <label className="flex-1 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-3 py-1.5 focus-within:border-[var(--primary)]">
+              <span className="block text-[10px] font-semibold uppercase text-[var(--muted)]">From</span>
+              <span className="flex items-center gap-0.5 text-sm font-semibold">
+                <span className="text-[var(--muted-2)]">₹</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={priceBounds.min}
+                  max={draftPrice.max - 1}
+                  value={draftPrice.min}
+                  onChange={(e) => updateDraftMin(Number(e.target.value) || priceBounds.min)}
+                  onBlur={() => commitPrice(draftPrice)}
+                  onKeyDown={(e) => e.key === "Enter" && commitPrice(draftPrice)}
+                  className="w-full bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </span>
+            </label>
+            <label className="flex-1 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-3 py-1.5 focus-within:border-[var(--primary)]">
+              <span className="block text-[10px] font-semibold uppercase text-[var(--muted)]">To</span>
+              <span className="flex items-center gap-0.5 text-sm font-semibold">
+                <span className="text-[var(--muted-2)]">₹</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={draftPrice.min + 1}
+                  max={priceBounds.max}
+                  value={draftPrice.max}
+                  onChange={(e) => updateDraftMax(Number(e.target.value) || priceBounds.max)}
+                  onBlur={() => commitPrice(draftPrice)}
+                  onKeyDown={(e) => e.key === "Enter" && commitPrice(draftPrice)}
+                  className="w-full bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </span>
+            </label>
           </div>
+          <p className="mt-1.5 text-[11px] text-[var(--muted-2)]">
+            Drag the handles or type an exact amount
+          </p>
         </div>
       </FilterSection>
 

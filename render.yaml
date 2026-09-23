@@ -21,11 +21,14 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     # Runs once per deploy, after the build but before traffic switches to the
-    # new instance: applies pending migrations, then seeds demo data only if
-    # the database is empty (safe to run on every deploy — see
-    # prisma/seed-if-empty.ts). If your plan doesn't support preDeployCommand,
-    # run these two commands manually from the Render Shell after first deploy.
-    preDeployCommand: npm run db:migrate:deploy && npm run db:seed:if-empty
+    # new instance: applies pending migrations, seeds demo data only if the
+    # database is empty, then backfills real vehicle photos onto any existing
+    # vehicle that doesn't have one yet (safe to run on every deploy — see
+    # prisma/seed-if-empty.ts and prisma/backfill-vehicle-images.ts).
+    # NOTE: preDeployCommand requires a paid Render plan. On the free plan
+    # this line is simply ignored — scripts/start.mjs runs the same three
+    # steps on every boot instead, so nothing extra is needed either way.
+    preDeployCommand: npm run db:migrate:deploy && npm run db:seed:if-empty && npm run db:backfill-images
     healthCheckPath: /
     autoDeploy: true
     envVars:

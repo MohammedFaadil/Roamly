@@ -13,6 +13,23 @@ export function slugify(input: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+/**
+ * Formats a Date as the "YYYY-MM-DDTHH:mm" string an
+ * `<input type="datetime-local">` expects for its `value` — using the
+ * browser's LOCAL date/time fields (getFullYear/getMonth/.../getMinutes).
+ *
+ * `date.toISOString()` is the wrong tool for this despite looking similar:
+ * it always renders in UTC. A datetime-local input's value is interpreted
+ * as local wall-clock time, so feeding it a UTC-based string silently shifts
+ * every date/time shown or defaulted in the UI by the user's UTC offset
+ * (e.g. off by 5h30m for IST) — pickup/return pickers, "hours between them"
+ * calculations, and anything else built from them all inherit that offset.
+ */
+export function toDatetimeLocalValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function distanceKm(
   lat1: number,
   lng1: number,

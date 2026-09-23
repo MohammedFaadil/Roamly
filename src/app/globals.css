@@ -12,6 +12,7 @@
   --primary: #14161a;
   --primary-foreground: #ffffff;
   --accent: #2563eb;
+  --accent-2: #7c3aed;
   --accent-foreground: #ffffff;
 
   --success: #15803d;
@@ -39,6 +40,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-accent-foreground: var(--accent-foreground);
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
@@ -134,4 +136,55 @@ input[type="range"]::-webkit-slider-runnable-track {
   background: linear-gradient(90deg, #eceef0 25%, #f5f6f7 37%, #eceef0 63%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease infinite;
+}
+
+/* Slow drifting gradient blobs — hero / CTA backgrounds */
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, 6%) scale(1.08); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5%, -4%) scale(1.1); }
+}
+.animate-drift-1 {
+  animation: drift-1 16s ease-in-out infinite;
+}
+.animate-drift-2 {
+  animation: drift-2 20s ease-in-out infinite;
+}
+
+/* Gentle vertical bob — icons, badges */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float {
+  animation: float-y 4s ease-in-out infinite;
+}
+
+/* Diagonal shine sweep — CTA buttons on hover */
+@keyframes shine-sweep {
+  from { transform: translateX(-120%) skewX(-15deg); }
+  to { transform: translateX(220%) skewX(-15deg); }
+}
+.group:hover .animate-shine {
+  animation: shine-sweep 1s ease;
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-1,
+  .animate-drift-2,
+  .animate-float,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
 }

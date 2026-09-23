@@ -36,7 +36,10 @@ export default async function OwnerBookingsPage({
       vehicleId: { in: vehicleIds },
       ...(filter.statuses.length ? { status: { in: filter.statuses as never[] } } : {}),
     },
-    include: { vehicle: true, renter: true },
+    include: {
+      vehicle: { include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
+      renter: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -77,7 +80,7 @@ export default async function OwnerBookingsPage({
                 startAt: b.startAt,
                 endAt: b.endAt,
                 totalPayable: b.totalPayable,
-                vehicle: b.vehicle,
+                vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                 counterpartyName: b.renter.name,
                 counterpartyRole: "Renter",
               }}

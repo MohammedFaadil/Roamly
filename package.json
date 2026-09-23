@@ -15,6 +15,7 @@
     "db:seed:if-empty": "tsx prisma/seed-if-empty.ts",
     "db:reset": "prisma migrate reset --force",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:backfill-images": "tsx prisma/backfill-vehicle-images.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

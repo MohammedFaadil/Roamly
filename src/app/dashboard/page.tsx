@@ -16,18 +16,18 @@ export default async function DashboardOverviewPage() {
   const [active, upcoming, recent, favoritesCount, totalSpent] = await Promise.all([
     prisma.booking.findMany({
       where: { renterId: user.id, status: { in: ["ACTIVE", "RETURN_PENDING"] } },
-      include: { vehicle: { include: { owner: true } } },
+      include: { vehicle: { include: { owner: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
       orderBy: { startAt: "asc" },
     }),
     prisma.booking.findMany({
       where: { renterId: user.id, status: { in: ["REQUESTED", "OWNER_ACCEPTED", "CONFIRMED", "HANDOVER_PENDING"] } },
-      include: { vehicle: { include: { owner: true } } },
+      include: { vehicle: { include: { owner: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
       orderBy: { startAt: "asc" },
       take: 5,
     }),
     prisma.booking.findMany({
       where: { renterId: user.id, status: "COMPLETED" },
-      include: { vehicle: { include: { owner: true } } },
+      include: { vehicle: { include: { owner: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
       orderBy: { updatedAt: "desc" },
       take: 3,
     }),
@@ -79,7 +79,7 @@ export default async function DashboardOverviewPage() {
                   startAt: b.startAt,
                   endAt: b.endAt,
                   totalPayable: b.totalPayable,
-                  vehicle: b.vehicle,
+                  vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                   counterpartyName: b.vehicle.owner.name,
                   counterpartyRole: "Owner",
                 }}
@@ -102,7 +102,7 @@ export default async function DashboardOverviewPage() {
                   startAt: b.startAt,
                   endAt: b.endAt,
                   totalPayable: b.totalPayable,
-                  vehicle: b.vehicle,
+                  vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                   counterpartyName: b.vehicle.owner.name,
                   counterpartyRole: "Owner",
                 }}

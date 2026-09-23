@@ -125,7 +125,7 @@ export default function FaqPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
           <HelpCircle className="size-5" />
         </div>
         <h1 className="mt-4 text-3xl font-bold tracking-tight">Frequently asked questions</h1>

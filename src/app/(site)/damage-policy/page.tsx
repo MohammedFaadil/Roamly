@@ -1,22 +1,25 @@
 import { Info, Camera, Bell, CheckCircle2, Gavel, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { APP_NAME } from "@/lib/constants";
+import { accentFor, type Accent } from "@/lib/accents";
 
 export const dynamic = "force-dynamic";
 
 function Section({
   icon: Icon,
+  accent,
   title,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="py-6 border-b border-[var(--border)] last:border-b-0">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
           <Icon className="size-4" />
         </div>
         <h2 className="text-lg font-bold tracking-tight">{title}</h2>
@@ -51,7 +54,7 @@ export default async function DamagePolicyPage() {
       </div>
 
       <div className="mt-4">
-        <Section icon={Camera} title="1. Owner reports damage">
+        <Section icon={Camera} accent={accentFor(0)} title="1. Owner reports damage">
           <p>
             After a rental reaches Active, Return Pending, or Completed status, the owner can file
             a damage claim within{" "}
@@ -62,7 +65,7 @@ export default async function DamagePolicyPage() {
           </p>
         </Section>
 
-        <Section icon={Bell} title="2. Renter is notified">
+        <Section icon={Bell} accent={accentFor(1)} title="2. Renter is notified">
           <p>
             The moment a claim is filed, the booking status changes to Disputed, a dispute record
             is opened, and the renter receives an in-app notification linking directly to the
@@ -70,7 +73,7 @@ export default async function DamagePolicyPage() {
           </p>
         </Section>
 
-        <Section icon={CheckCircle2} title="3. Renter accepts or disputes">
+        <Section icon={CheckCircle2} accent={accentFor(2)} title="3. Renter accepts or disputes">
           <p>
             The renter chooses one of two responses:
           </p>
@@ -88,7 +91,7 @@ export default async function DamagePolicyPage() {
           </ul>
         </Section>
 
-        <Section icon={Wallet} title="4. Charges & deposit refund">
+        <Section icon={Wallet} accent={accentFor(3)} title="4. Charges & deposit refund">
           <p>
             When a claim is accepted, the estimated cost is deducted from the security deposit
             held for that booking, and any remaining deposit balance is refunded to the renter.
@@ -96,7 +99,7 @@ export default async function DamagePolicyPage() {
           </p>
         </Section>
 
-        <Section icon={Gavel} title="5. Disputed claims go to platform review">
+        <Section icon={Gavel} accent={accentFor(4)} title="5. Disputed claims go to platform review">
           <p>
             Claims the renter disputes are escalated for manual review using the evidence
             submitted by the owner and any response provided by the renter. Platform review aims

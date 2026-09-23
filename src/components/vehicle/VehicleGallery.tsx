@@ -36,10 +36,13 @@ export function VehicleGallery({
         <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur">
           {tiles[active].label}
         </span>
-        <span className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
-          <Expand className="size-3" /> {active + 1}/{tiles.length}
-        </span>
+        {tiles.length > 1 && (
+          <span className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+            <Expand className="size-3" /> {active + 1}/{tiles.length}
+          </span>
+        )}
       </div>
+      {tiles.length > 1 && (
       <div className="mt-2.5 grid grid-cols-4 gap-2 sm:grid-cols-6">
         {tiles.map((tile, i) => (
           <button
@@ -59,6 +62,7 @@ export function VehicleGallery({
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }

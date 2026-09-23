@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Car, Bike, LocateFixed, Search, Loader2 } from "lucide-react";
-import { cn, distanceKm as haversine } from "@/lib/utils";
+import { cn, distanceKm as haversine, toDatetimeLocalValue } from "@/lib/utils";
 import { CITIES } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 
@@ -12,7 +12,7 @@ type VType = "ALL" | "CAR" | "BIKE";
 function nowLocal(offsetHours = 2) {
   const d = new Date(Date.now() + offsetHours * 3600000);
   d.setMinutes(Math.round(d.getMinutes() / 30) * 30, 0, 0);
-  return d.toISOString().slice(0, 16);
+  return toDatetimeLocalValue(d);
 }
 
 export function HeroSearch() {

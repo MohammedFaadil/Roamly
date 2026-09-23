@@ -1,4 +1,4 @@
-# Roamly
+# Roamly Vehicle renting platform
 
 A peer-to-peer car & bike rental marketplace for India — think "Airbnb for
 vehicles." Owners list their personal cars and bikes with their own pricing
@@ -241,6 +241,8 @@ prisma/
   migrations/             SQL migration history (Postgres)
   seed.ts                 Destructive full reseed — local dev only
   seed-if-empty.ts        Safe reseed — only runs if the DB is empty (Render)
+  vehicle-images.ts       Shared brand+model → real photo URL map (Wikimedia Commons)
+  backfill-vehicle-images.ts  Non-destructive — adds photos to existing imageless vehicles (Render)
 src/
   app/
     (site)/               Public pages — homepage, explore, vehicle detail,
@@ -296,7 +298,7 @@ below — pick one).
 git clone <this repo>
 cd Ride-Share
 npm install
-cp .env.example .env      # then fill in DATABASE_URL (see below) and JWT_SECRET
+cp .env.example .env      # then fill in DATABASE_URL/DIRECT_URL (see below) and JWT_SECRET
 ```
 
 **Get a Postgres database** (pick one):
@@ -304,14 +306,17 @@ cp .env.example .env      # then fill in DATABASE_URL (see below) and JWT_SECRET
 - **Docker (recommended, one command):**
   ```bash
   docker compose up -d
-  # DATABASE_URL in .env.example already matches this: 
+  # DATABASE_URL and DIRECT_URL in .env.example already match this:
   # postgresql://roamly:roamly@localhost:5432/roamly
   ```
 - **Free hosted Postgres** — [Neon](https://neon.tech), [Supabase](https://supabase.com),
   or a free [Render Postgres](https://render.com/docs/databases) instance all
-  work — create one and paste its connection string into `DATABASE_URL`.
+  work — create one and paste its connection string into both `DATABASE_URL`
+  and `DIRECT_URL` (a single non-pooled connection string works fine for
+  both locally; they only need to differ in production against Supabase's
+  pooler — see [Deploying to Render](#deploying-to-render)).
 - **Existing local Postgres install** — create a database and point
-  `DATABASE_URL` at it.
+  `DATABASE_URL`/`DIRECT_URL` at it.
 
 Then apply the schema and load demo data:
 
@@ -351,7 +356,8 @@ To reset your local database back to a clean seeded state at any point:
 | `npm start` | Start the production server (reads `PORT` from the environment, defaults to 3000) |
 | `npm run lint` | ESLint |
 | `npm run db:seed` | **Destructive.** Wipes and reseeds the database with fresh demo data — local dev only |
-| `npm run db:seed:if-empty` | Safe to run anytime — seeds demo data only if the `User` table is empty. Used automatically on Render's first deploy |
+| `npm run db:seed:if-empty` | Safe to run anytime — seeds demo data only if the `User` table is empty. Used automatically on every deploy |
+| `npm run db:backfill-images` | **Non-destructive**, safe to run anytime — adds a real photo (from `prisma/vehicle-images.ts`) to any existing vehicle that doesn't have one yet, without touching anything else. Used automatically on every deploy (see below) |
 | `npm run db:reset` | `prisma migrate reset --force` — drops, recreates, migrates, and reseeds |
 | `npm run db:migrate:deploy` | Applies pending migrations without prompting — used in production deploys |
 | `npm run db:studio` | Opens [Prisma Studio](https://www.prisma.io/studio) — a GUI for browsing/editing the database |
@@ -408,28 +414,42 @@ for the web service only; the database is wired up as a one-time manual step.
    - `DIRECT_URL` — the session pooler string
    (`render.yaml` marks both `sync: false`, so Render leaves them alone on
    every future blueprint sync — you only enter them once.)
-4. On the first deploy, `preDeployCommand` runs `prisma migrate deploy`
-   (creates all tables, using `DIRECT_URL`) and then `db:seed:if-empty`
-   (loads demo data, since the database starts empty). Every later deploy
-   re-runs the same two commands, but the seed step is a no-op once real data
-   exists — **your data is never wiped by a redeploy.** (Even if
-   `preDeployCommand` isn't available on your plan, `scripts/start.mjs` runs
-   the same two commands on every boot as a fallback — see below.)
+4. Every time the app boots (`npm start` → `scripts/start.mjs`), it runs three
+   idempotent steps before starting the server: `prisma migrate deploy`
+   (applies any pending migrations, using `DIRECT_URL`), `db:seed:if-empty`
+   (loads demo data only if the database is still empty), and
+   `db:backfill-images` (adds a real photo to any vehicle that doesn't have
+   one yet — see below). None of these ever touch existing real data — **a
+   redeploy or restart never wipes anything.**
 5. Once the deploy finishes, open the service URL and log in with a
    [demo account](#demo-accounts).
 
-### If your plan doesn't support `preDeployCommand`
+> `render.yaml` also sets a `preDeployCommand` running the same migrate/seed/
+> backfill steps, for accounts on a plan where that feature is available (it
+> runs once, before traffic switches to the new instance, which is slightly
+> cleaner than doing it at boot). **Free-tier Render doesn't support
+> `preDeployCommand`** — Render just ignores that line — so `scripts/start.mjs`
+> running the same steps at boot is what actually makes this work on the free
+> plan. You don't need to configure anything either way; one of the two paths
+> always runs.
 
-Some Render plans/older accounts don't have pre-deploy commands available.
-You don't need to do anything extra — `npm start` (`scripts/start.mjs`) runs
-`prisma migrate deploy` and `db:seed:if-empty` itself on every startup before
-serving traffic. If you want to run them by hand anyway, open the service's
-**Shell** tab and run:
+### Why images might be missing after a deploy (and how it self-heals)
 
-```bash
-npm run db:migrate:deploy
-npm run db:seed:if-empty
-```
+If you deployed *before* `prisma/vehicle-images.ts` existed (or before a
+vehicle model was added to it) and the database was already seeded, later
+deploys skip re-seeding — `db:seed:if-empty` only runs once, on purpose, so it
+never wipes real bookings/users. That would normally leave those vehicles
+permanently imageless even after pulling the updated code.
+
+`db:backfill-images` (`prisma/backfill-vehicle-images.ts`) exists specifically
+for that: it's a **non-destructive** pass that finds any vehicle with zero
+photos and adds one if its brand+model matches an entry in
+`prisma/vehicle-images.ts`, without touching users, bookings, or anything
+else. It runs automatically on every boot (see above), so simply redeploying
+(or restarting the service) after pulling updated code is enough to fix it —
+no manual database work needed. You can also run it by hand any time:
+`npm run db:backfill-images` (locally) or from the Render **Shell** tab
+(deployed).
 
 ### Manual setup (without the Blueprint)
 
@@ -440,7 +460,8 @@ If you'd rather click through the UI instead of using `render.yaml`:
 2. **New → Web Service** — connect the repo.
    - Build command: `npm install && npm run build`
    - Start command: `npm start`
-   - Pre-deploy command (if available): `npm run db:migrate:deploy && npm run db:seed:if-empty`
+   - Pre-deploy command (if available): `npm run db:migrate:deploy && npm run db:seed:if-empty && npm run db:backfill-images`
+     — optional either way, since `npm start` runs the same three steps at boot
    - Environment variables:
      - `DATABASE_URL` / `DIRECT_URL` — from step 1
      - `JWT_SECRET` — generate one with

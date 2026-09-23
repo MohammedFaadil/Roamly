@@ -38,7 +38,7 @@ export function ExploreResults({
 
   return (
     <div className="flex-1 min-w-0">
-      <div className="flex items-center justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-5">
         <p className="text-sm text-[var(--muted)]">
           <span className="font-semibold text-[var(--foreground)]">{total}</span> vehicles to rent
         </p>
@@ -55,8 +55,9 @@ export function ExploreResults({
             <option value="newest">Newest listed</option>
           </select>
           <button
+            type="button"
             onClick={() => setShowMap((v) => !v)}
-            className="hidden sm:flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-white px-3 py-1.5 text-sm font-medium"
+            className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-white px-3 py-1.5 text-sm font-medium"
           >
             {showMap ? <List className="size-4" /> : <Map className="size-4" />}
             {showMap ? "Hide map" : "Show map"}
@@ -64,7 +65,23 @@ export function ExploreResults({
         </div>
       </div>
 
-      <div className={showMap ? "grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6" : ""}>
+      <div className={showMap ? "flex flex-col lg:grid lg:grid-cols-[1fr_420px] gap-6" : ""}>
+        {showMap && (
+          <div className="h-80 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:order-last">
+            <MapPanel
+              vehicles={vehicles.map((v) => ({
+                id: v.id,
+                brand: v.brand,
+                model: v.model,
+                lat: v.lat ?? 0,
+                lng: v.lng ?? 0,
+                pricePerDay: v.pricePerDay,
+                ratingAvg: v.ratingAvg,
+                ratingCount: v.ratingCount,
+              }))}
+            />
+          </div>
+        )}
         <div>
           {loading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -86,22 +103,6 @@ export function ExploreResults({
             </div>
           )}
         </div>
-        {showMap && (
-          <div className="hidden xl:block sticky top-20 h-[calc(100vh-6rem)]">
-            <MapPanel
-              vehicles={vehicles.map((v) => ({
-                id: v.id,
-                brand: v.brand,
-                model: v.model,
-                lat: v.lat ?? 0,
-                lng: v.lng ?? 0,
-                pricePerDay: v.pricePerDay,
-                ratingAvg: v.ratingAvg,
-                ratingCount: v.ratingCount,
-              }))}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

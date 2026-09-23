@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { formatINR } from "@/lib/format";
 import { recommendPrice } from "@/lib/pricing";
 import { APP_NAME, OWNER_COMMISSION_RATE } from "@/lib/constants";
+import { accentFor, type Accent } from "@/lib/accents";
 
 export const dynamic = "force-dynamic";
 
@@ -102,13 +103,13 @@ export default async function ListVehiclePage() {
       {/* Value props */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <ValueProp icon={<ShieldCheck className="size-5" />} title="You approve every request">
+          <ValueProp icon={<ShieldCheck className="size-5" />} accent={accentFor(0)} title="You approve every request">
             No booking is confirmed until you accept it — reject anything that doesn&apos;t feel right.
           </ValueProp>
-          <ValueProp icon={<Tag className="size-5" />} title="You set the price">
+          <ValueProp icon={<Tag className="size-5" />} accent={accentFor(1)} title="You set the price">
             Hourly, daily, and weekly rates, security deposit, and mileage limits are entirely up to you.
           </ValueProp>
-          <ValueProp icon={<IndianRupee className="size-5" />} title="Get paid per rental">
+          <ValueProp icon={<IndianRupee className="size-5" />} accent={accentFor(2)} title="Get paid per rental">
             Payment is collected before pickup and settled to you after each completed rental.
           </ValueProp>
         </div>
@@ -122,16 +123,16 @@ export default async function ListVehiclePage() {
             <p className="mt-1 text-sm text-[var(--muted)]">Most owners are ready to receive requests the same day</p>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Step number={1} icon={<UserPlus className="size-5" />} title="Create &amp; verify">
+            <Step number={1} icon={<UserPlus className="size-5" />} accent={accentFor(0)} title="Create &amp; verify">
               Sign up and complete a quick identity verification.
             </Step>
-            <Step number={2} icon={<FileCheck2 className="size-5" />} title="Add your vehicle">
+            <Step number={2} icon={<FileCheck2 className="size-5" />} accent={accentFor(1)} title="Add your vehicle">
               Enter details, upload photos, and add registration info.
             </Step>
-            <Step number={3} icon={<Tag className="size-5" />} title="Set price &amp; availability">
+            <Step number={3} icon={<Tag className="size-5" />} accent={accentFor(2)} title="Set price &amp; availability">
               Use the recommended price or set your own — plus deposit and mileage rules.
             </Step>
-            <Step number={4} icon={<Inbox className="size-5" />} title="Approve &amp; earn">
+            <Step number={4} icon={<Inbox className="size-5" />} accent={accentFor(3)} title="Approve &amp; earn">
               Review each request, hand over the keys, and get paid.
             </Step>
           </div>
@@ -142,7 +143,7 @@ export default async function ListVehiclePage() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="flex gap-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
               <KeyRound className="size-5" />
             </div>
             <div>
@@ -154,7 +155,7 @@ export default async function ListVehiclePage() {
             </div>
           </div>
           <div className="flex gap-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600">
               <CalendarCheck className="size-5" />
             </div>
             <div>
@@ -199,16 +200,18 @@ export default async function ListVehiclePage() {
 
 function ValueProp({
   icon,
+  accent,
   title,
   children,
 }: {
   icon: React.ReactNode;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
-      <div className="flex size-11 items-center justify-center rounded-full bg-gray-100">{icon}</div>
+      <div className={`flex size-11 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>{icon}</div>
       <h3 className="mt-4 text-sm font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-[var(--muted)]">{children}</p>
     </div>
@@ -218,18 +221,20 @@ function ValueProp({
 function Step({
   number,
   icon,
+  accent,
   title,
   children,
 }: {
   number: number;
   icon: React.ReactNode;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-6">
       <span className="absolute right-5 top-5 text-2xl font-bold text-gray-100">0{number}</span>
-      <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">{icon}</div>
+      <div className={`flex size-10 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>{icon}</div>
       <h3 className="mt-4 text-sm font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-[var(--muted)]">{children}</p>
     </div>

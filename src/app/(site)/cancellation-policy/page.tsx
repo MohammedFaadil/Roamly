@@ -1,22 +1,25 @@
 import { Info, Clock, UserX, Wallet, Ban } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { APP_NAME } from "@/lib/constants";
+import { accentFor, type Accent } from "@/lib/accents";
 
 export const dynamic = "force-dynamic";
 
 function Section({
   icon: Icon,
+  accent,
   title,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  accent: Accent;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="py-6 border-b border-[var(--border)] last:border-b-0">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-full ${accent.bg} ${accent.text}`}>
           <Icon className="size-4" />
         </div>
         <h2 className="text-lg font-bold tracking-tight">{title}</h2>
@@ -49,7 +52,7 @@ export default async function CancellationPolicyPage() {
       </div>
 
       <div className="mt-4">
-        <Section icon={Clock} title="Free cancellation window">
+        <Section icon={Clock} accent={accentFor(0)} title="Free cancellation window">
           <p>
             You can cancel a booking free of charge if you do so at least{" "}
             <strong className="text-[var(--foreground)]">{freeWindowHours} hours</strong> before
@@ -58,7 +61,7 @@ export default async function CancellationPolicyPage() {
           </p>
         </Section>
 
-        <Section icon={Ban} title="Cancelling after the free window">
+        <Section icon={Ban} accent={accentFor(1)} title="Cancelling after the free window">
           <p>
             Cancellations made within {freeWindowHours} hours of the scheduled pickup time are
             treated as late cancellations. A partial charge applies to compensate the owner for
@@ -67,7 +70,7 @@ export default async function CancellationPolicyPage() {
           </p>
         </Section>
 
-        <Section icon={UserX} title="No-show policy">
+        <Section icon={UserX} accent={accentFor(2)} title="No-show policy">
           <p>
             If you do not arrive for pickup and do not cancel the booking, it is treated as a
             no-show. No-shows are charged the same as a late cancellation and may affect your
@@ -75,7 +78,7 @@ export default async function CancellationPolicyPage() {
           </p>
         </Section>
 
-        <Section icon={Ban} title="Owner-initiated cancellation">
+        <Section icon={Ban} accent={accentFor(3)} title="Owner-initiated cancellation">
           <p>
             Owners are expected to honour every booking they accept. If an owner cancels a
             confirmed booking, the renter receives a full refund of all amounts paid, with no
@@ -84,7 +87,7 @@ export default async function CancellationPolicyPage() {
           </p>
         </Section>
 
-        <Section icon={Wallet} title="Refund timing">
+        <Section icon={Wallet} accent={accentFor(4)} title="Refund timing">
           <p>
             This is a demo product: refunds are not processed through a real payment gateway or
             bank. Whenever a refund is due, the amount is credited{" "}

@@ -20,13 +20,19 @@ export default async function OwnerOverviewPage() {
   const [pendingRequests, activeBookings, completedCount, earnings, avgRating] = await Promise.all([
     prisma.booking.findMany({
       where: { vehicleId: { in: vehicleIds }, status: "REQUESTED" },
-      include: { vehicle: true, renter: true },
+      include: {
+        vehicle: { include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
+        renter: true,
+      },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
     prisma.booking.findMany({
       where: { vehicleId: { in: vehicleIds }, status: { in: ["ACTIVE", "HANDOVER_PENDING", "RETURN_PENDING"] } },
-      include: { vehicle: true, renter: true },
+      include: {
+        vehicle: { include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
+        renter: true,
+      },
       orderBy: { startAt: "asc" },
       take: 5,
     }),
@@ -96,7 +102,7 @@ export default async function OwnerOverviewPage() {
                   startAt: b.startAt,
                   endAt: b.endAt,
                   totalPayable: b.totalPayable,
-                  vehicle: b.vehicle,
+                  vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                   counterpartyName: b.renter.name,
                   counterpartyRole: "Renter",
                 }}
@@ -119,7 +125,7 @@ export default async function OwnerOverviewPage() {
                   startAt: b.startAt,
                   endAt: b.endAt,
                   totalPayable: b.totalPayable,
-                  vehicle: b.vehicle,
+                  vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                   counterpartyName: b.renter.name,
                   counterpartyRole: "Renter",
                 }}

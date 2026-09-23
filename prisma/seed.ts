@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { VEHICLE_IMAGES } from "./vehicle-images";
 
 const prisma = new PrismaClient();
 
@@ -79,6 +80,7 @@ const BIKE_CATALOG = [
   { brand: "Ola Electric", model: "S1 Pro", category: "ELECTRIC_BIKE", cc: 0 },
   { brand: "Suzuki", model: "Access 125", category: "SCOOTER", cc: 125 },
 ];
+
 
 const CAR_FEATURES = [
   "Air Conditioning",
@@ -293,6 +295,13 @@ async function main() {
         totalRentals: randInt(3, 90),
       },
     });
+
+    const imageUrl = VEHICLE_IMAGES[`${catalogItem.brand}|${catalogItem.model}`];
+    if (imageUrl) {
+      await prisma.vehicleImage.create({
+        data: { vehicleId: vehicle.id, url: imageUrl, label: "Exterior", sortOrder: 0 },
+      });
+    }
 
     await prisma.vehicleDocument.createMany({
       data: [

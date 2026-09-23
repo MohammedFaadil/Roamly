@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { computeBookingPrice, type VehicleForPricing } from "@/lib/pricing";
 import { formatINR } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
+import { toDatetimeLocalValue } from "@/lib/utils";
 
 function nowLocal(offsetHours: number) {
   const d = new Date(Date.now() + offsetHours * 3600000);
   d.setMinutes(Math.round(d.getMinutes() / 30) * 30, 0, 0);
-  return d.toISOString().slice(0, 16);
+  return toDatetimeLocalValue(d);
 }
 
 export function BookingWidget({

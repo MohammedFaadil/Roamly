@@ -106,6 +106,7 @@ export default async function BookingDetailPage({ params }: PageProps<"/booking/
               brand={booking.vehicle.brand}
               model={booking.vehicle.model}
               seed={booking.vehicle.id}
+              imageUrl={booking.vehicle.images[0]?.url}
               className="h-24 w-32 shrink-0 rounded-[var(--radius-md)]"
               iconClassName="size-10"
             />

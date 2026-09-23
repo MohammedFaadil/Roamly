@@ -5,8 +5,11 @@
 // `${PORT:-3000}` syntax, which cmd.exe (Windows) can't parse.
 //
 // On every startup we also run `prisma migrate deploy` (applies any pending
-// migrations) and `db:seed:if-empty` (seeds demo data only when the DB is
-// empty). This replaces Render's `preDeployCommand` which requires a paid plan.
+// migrations), `db:seed:if-empty` (seeds demo data only when the DB is
+// empty), and `db:backfill-images` (adds real photos to any vehicle that
+// doesn't have one yet — safe on data from an older deploy, see
+// prisma/backfill-vehicle-images.ts for why this is needed separately from
+// seeding). This replaces Render's `preDeployCommand` which requires a paid plan.
 import { execSync } from "node:child_process";
 import { spawn } from "node:child_process";
 
@@ -29,6 +32,15 @@ try {
 } catch (err) {
   // Non-fatal — app can still run without demo data
   console.warn("==> Seed warning:", err.message);
+}
+
+console.log("==> Backfilling vehicle images (if any are missing)...");
+try {
+  execSync("npx tsx prisma/backfill-vehicle-images.ts", { stdio: "inherit" });
+  console.log("==> Image backfill complete.");
+} catch (err) {
+  // Non-fatal — app can still run with some vehicles showing the placeholder
+  console.warn("==> Image backfill warning:", err.message);
 }
 
 console.log("==> Starting Next.js server on port", port);

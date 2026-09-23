@@ -27,6 +27,7 @@ export default async function OwnerCalendarPage() {
         where: { endAt: { gte: new Date() } },
         orderBy: { startAt: "asc" },
       },
+      images: { orderBy: { sortOrder: "asc" }, take: 1 },
     },
   });
 
@@ -44,7 +45,7 @@ export default async function OwnerCalendarPage() {
           {vehicles.map((v) => (
             <div key={v.id} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5">
               <div className="flex items-center gap-3 mb-4">
-                <VehicleThumb type={v.type as "CAR" | "BIKE"} brand={v.brand} model={v.model} seed={v.id} className="h-12 w-16 rounded-[var(--radius-sm)] shrink-0" iconClassName="size-5" />
+                <VehicleThumb type={v.type as "CAR" | "BIKE"} brand={v.brand} model={v.model} seed={v.id} imageUrl={v.images[0]?.url} className="h-12 w-16 rounded-[var(--radius-sm)] shrink-0" iconClassName="size-5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold">{v.year} {v.brand} {v.model}</p>
                   <p className="text-xs text-[var(--muted)]">{v.city}</p>

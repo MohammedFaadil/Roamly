@@ -12,7 +12,7 @@ export default async function FavoritesPage() {
 
   const favorites = await prisma.favorite.findMany({
     where: { userId: user.id },
-    include: { vehicle: true },
+    include: { vehicle: { include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -32,7 +32,12 @@ export default async function FavoritesPage() {
       ) : (
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {favorites.map((f) => (
-            <VehicleCard key={f.id} vehicle={f.vehicle} favorited isAuthenticated />
+            <VehicleCard
+              key={f.id}
+              vehicle={{ ...f.vehicle, imageUrl: f.vehicle.images[0]?.url ?? null }}
+              favorited
+              isAuthenticated
+            />
           ))}
         </div>
       )}

@@ -26,6 +26,7 @@ export default async function MyVehiclesPage() {
   const vehicles = await prisma.vehicle.findMany({
     where: { ownerId: user.id },
     orderBy: { createdAt: "desc" },
+    include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
 
   return (
@@ -57,7 +58,7 @@ export default async function MyVehiclesPage() {
               className="block overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-white hover:shadow-md transition-shadow"
             >
               <div className="relative h-36">
-                <VehicleThumb type={v.type as "CAR" | "BIKE"} brand={v.brand} model={v.model} seed={v.id} className="h-full w-full" />
+                <VehicleThumb type={v.type as "CAR" | "BIKE"} brand={v.brand} model={v.model} seed={v.id} imageUrl={v.images[0]?.url} className="h-full w-full" />
                 <div className="absolute left-2.5 top-2.5">
                   <Badge tone={STATUS_TONE[v.status] ?? "neutral"}>{v.status.replace("_", " ")}</Badge>
                 </div>

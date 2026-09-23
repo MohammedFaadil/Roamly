@@ -28,7 +28,9 @@ export default async function MyBookingsPage({
 
   const bookings = await prisma.booking.findMany({
     where: { renterId: user.id, ...(filter.statuses.length ? { status: { in: filter.statuses as never[] } } : {}) },
-    include: { vehicle: { include: { owner: true } } },
+    include: {
+      vehicle: { include: { owner: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -71,7 +73,7 @@ export default async function MyBookingsPage({
                 startAt: b.startAt,
                 endAt: b.endAt,
                 totalPayable: b.totalPayable,
-                vehicle: b.vehicle,
+                vehicle: { ...b.vehicle, imageUrl: b.vehicle.images[0]?.url ?? null },
                 counterpartyName: b.vehicle.owner.name,
                 counterpartyRole: "Owner",
               }}
