@@ -1,22 +1,15 @@
-# Render Blueprint — one-click deploy for Roamly (web service + managed Postgres).
+# Render Blueprint — one-click deploy for Roamly (web service; database is
+# external, on Supabase — see README.md > "Deploying to Render" > "Database:
+# Supabase" for the full walkthrough).
 #
 # Usage:
 #   1. Push this repo to GitHub/GitLab.
 #   2. In the Render dashboard: New > Blueprint > select this repo.
-#   3. Render reads this file, provisions the database and web service, and
-#      deploys automatically. No manual env var setup needed — JWT_SECRET is
-#      generated for you and DATABASE_URL is wired to the database below.
-#
-# See README.md > "Deploying to Render" for the full walkthrough, including
-# what to do if preDeployCommand isn't available on your plan, and how to add
-# a persistent disk for uploaded photos.
-
-databases:
-  - name: roamly-db
-    databaseName: roamly
-    user: roamly
-    plan: free
-    region: singapore
+#   3. Render provisions the web service and generates JWT_SECRET for you.
+#      DATABASE_URL and DIRECT_URL are NOT managed here (sync: false below) —
+#      set them manually in the Render dashboard once, from your Supabase
+#      project's Connect > ORMs > Prisma panel. Blueprint syncs will never
+#      overwrite them.
 
 services:
   - type: web
@@ -36,10 +29,15 @@ services:
     healthCheckPath: /
     autoDeploy: true
     envVars:
+      # Supabase Postgres. Set both manually in the Render dashboard from
+      # Supabase's Connect > ORMs > Prisma panel — DATABASE_URL is the
+      # transaction pooler (port 6543, used at runtime), DIRECT_URL is the
+      # session pooler (port 5432, used for `prisma migrate deploy`).
+      # sync: false means Render never overwrites these from this file.
       - key: DATABASE_URL
-        fromDatabase:
-          name: roamly-db
-          property: connectionString
+        sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV

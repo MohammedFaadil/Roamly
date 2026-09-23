@@ -334,7 +334,8 @@ To reset your local database back to a clean seeded state at any point:
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | Postgres connection string. On Render, wired automatically from the `roamly-db` blueprint database. |
+| `DATABASE_URL` | Yes | Postgres connection string used at runtime. In production this is Supabase's **transaction pooler** URL (port 6543, `?pgbouncer=true`) — set manually in the Render dashboard, see "Deploying to Render" below. |
+| `DIRECT_URL` | Yes | Postgres connection string used only for `prisma migrate deploy`. In production this is Supabase's **session pooler** URL (port 5432) — transaction-mode pooling doesn't support the schema-level locks migrations need. Same value as `DATABASE_URL` for local dev (no pooler involved). |
 | `JWT_SECRET` | Yes in production (throws on boot if missing) | Signs session cookies. Render's blueprint generates a secure random value automatically (`generateValue: true`). For local dev, any string works — see `.env.example`. |
 | `UPLOAD_DIR` | No | Absolute or relative path where uploaded files are written/read. Defaults to `./uploads`. Set this to a mounted disk's path in production if you want uploads to survive deploys (see below). |
 | `NODE_ENV` | Set by the platform | `production` enables secure cookies and disables the JWT_SECRET fallback. Next.js/Render set this automatically — you shouldn't need to touch it. |
@@ -375,35 +376,55 @@ these are just how the seed data happens to be distributed.
 
 ## Deploying to Render
 
-Everything — the Next.js app **and** the Postgres database — runs on Render.
-`render.yaml` in the repo root is a [Render Blueprint](https://render.com/docs/blueprint-spec):
-Render reads it and provisions both automatically.
+The Next.js app runs on Render; the Postgres database is external, on
+**Supabase**. (Render's own free Postgres plan auto-deletes the database ~30
+days after creation, which is a bad fit for anything you want to keep around
+— Supabase's free tier doesn't have that limit, it just auto-*pauses* a
+project after a week of no traffic, which a "resume" click in its dashboard
+fixes.) `render.yaml` in the repo root is a [Render Blueprint](https://render.com/docs/blueprint-spec)
+for the web service only; the database is wired up as a one-time manual step.
 
-### One-click deploy
+### Database: Supabase
+
+1. Create a project at [supabase.com](https://supabase.com) (any region;
+   pick one close to your Render service's region for lower latency).
+2. In the project, open **Connect → ORMs → Prisma**. Copy the two connection
+   strings it shows:
+   - `DATABASE_URL` — the **transaction pooler** (port 6543, `?pgbouncer=true`)
+   - `DIRECT_URL` — the **session pooler** (port 5432)
+   Both contain `[YOUR-PASSWORD]` as a placeholder — swap in the database
+   password you set when creating the project.
+3. Keep these two values handy for the Render setup below.
+
+### Web service: Render
 
 1. Push this repository to GitHub or GitLab.
-2. In the Render dashboard: **New → Blueprint**, select the repo.
-3. Render provisions:
-   - A **free Postgres database** (`roamly-db`).
-   - A **free web service** (`roamly`) with `DATABASE_URL` wired to that
-     database and a secure random `JWT_SECRET` generated for you — nothing to
-     fill in.
+2. In the Render dashboard: **New → Blueprint**, select the repo. Render
+   provisions a **free web service** (`roamly`) and generates a secure random
+   `JWT_SECRET` for you.
+3. Once the service exists, open its **Environment** tab and add the two
+   values from the Supabase step above:
+   - `DATABASE_URL` — the transaction pooler string
+   - `DIRECT_URL` — the session pooler string
+   (`render.yaml` marks both `sync: false`, so Render leaves them alone on
+   every future blueprint sync — you only enter them once.)
 4. On the first deploy, `preDeployCommand` runs `prisma migrate deploy`
-   (creates all tables) and then `db:seed:if-empty` (loads demo data, since
-   the database starts empty). Every later deploy re-runs the same two
-   commands, but the seed step is a no-op once real data exists — **your
-   data is never wiped by a redeploy.**
+   (creates all tables, using `DIRECT_URL`) and then `db:seed:if-empty`
+   (loads demo data, since the database starts empty). Every later deploy
+   re-runs the same two commands, but the seed step is a no-op once real data
+   exists — **your data is never wiped by a redeploy.** (Even if
+   `preDeployCommand` isn't available on your plan, `scripts/start.mjs` runs
+   the same two commands on every boot as a fallback — see below.)
 5. Once the deploy finishes, open the service URL and log in with a
    [demo account](#demo-accounts).
 
-That's the whole process — no manual environment variable entry, no separate
-database setup step, no SSH session required.
-
 ### If your plan doesn't support `preDeployCommand`
 
-Some Render plans/older accounts don't have pre-deploy commands available. If
-migrations don't run automatically, open the service's **Shell** tab in the
-Render dashboard after the first deploy and run:
+Some Render plans/older accounts don't have pre-deploy commands available.
+You don't need to do anything extra — `npm start` (`scripts/start.mjs`) runs
+`prisma migrate deploy` and `db:seed:if-empty` itself on every startup before
+serving traffic. If you want to run them by hand anyway, open the service's
+**Shell** tab and run:
 
 ```bash
 npm run db:migrate:deploy
@@ -414,14 +435,14 @@ npm run db:seed:if-empty
 
 If you'd rather click through the UI instead of using `render.yaml`:
 
-1. **New → PostgreSQL** — any plan, any region. Copy its **Internal
-   Connection String**.
+1. Follow the "Database: Supabase" steps above to get `DATABASE_URL` and
+   `DIRECT_URL`.
 2. **New → Web Service** — connect the repo.
    - Build command: `npm install && npm run build`
    - Start command: `npm start`
    - Pre-deploy command (if available): `npm run db:migrate:deploy && npm run db:seed:if-empty`
    - Environment variables:
-     - `DATABASE_URL` — the connection string from step 1
+     - `DATABASE_URL` / `DIRECT_URL` — from step 1
      - `JWT_SECRET` — generate one with
        `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
        and paste it in (or use Render's "Generate" button next to the field)
